@@ -1,0 +1,155 @@
+[
+  {
+    "id": "AVAN-001",
+    "type": "avance",
+    "project": "dos_mentes",
+    "title": "Especial La vida es un viaje (48s) SUBIDO (+300k vistas)",
+    "url": "",
+    "notes": "Video de 48s con estelas y estrellas pegando fuerte (~300k). Valida la fórmula emocional de stickmen + luz sobre fondo oscuro.",
+    "status": "listo",
+    "priority": "alta",
+    "tags": [
+      "300k",
+      "estelas",
+      "blender",
+      "viral"
+    ]
+  },
+  {
+    "id": "IDEA-001",
+    "type": "idea",
+    "project": "dos_mentes",
+    "title": "Especial #2: La huella de los padres (El ambiente moldea)",
+    "url": "",
+    "notes": "Inspiración directa en La vida es un viaje: cómo la vida de los padres se refleja en el crecimiento del hijo. Padre con disciplina genera hijo con disciplina vs vicios. Mensaje: El ambiente moldea.",
+    "status": "pendiente",
+    "priority": "alta",
+    "tags": [
+      "emocional",
+      "estelas",
+      "blender",
+      "ambiente"
+    ]
+  },
+  {
+    "id": "IDEA-002",
+    "type": "idea",
+    "project": "dos_mentes",
+    "title": "Especial #3: La caja de recuerdos (El primer gol y el abrazo)",
+    "url": "",
+    "notes": "Stickman en habitación oscura con lluvia y rayos, foco en medio. Abre caja de recuerdos, zoom a su cerebro en 3ra persona. Primer gol, nene le dice a su yo grande: No te rindas nunca, yo confio en ti. Bucle infinito.",
+    "status": "pendiente",
+    "priority": "alta",
+    "tags": [
+      "guion-completo",
+      "emocional",
+      "recuerdos",
+      "blender"
+    ]
+  },
+  {
+    "id": "REF-001",
+    "type": "referencia",
+    "project": "dos_mentes",
+    "title": "Referencia Viral: Ángulo que dio casi 500k visitas",
+    "url": "https://www.instagram.com/reels/DezRXh2glO0/",
+    "notes": "Estilo viral en EEUU del personaje explicativo. De este video se sacó el ángulo que metió casi 500k vistas.",
+    "status": "en_proceso",
+    "priority": "alta",
+    "tags": [
+      "viral",
+      "500k",
+      "gancho"
+    ]
+  },
+  {
+    "id": "REF-002",
+    "type": "referencia",
+    "project": "dos_mentes",
+    "title": "Referencia @dosmentes.3d: El tema del caracol",
+    "url": "https://www.instagram.com/reels/DerTPkmM8im/",
+    "notes": "Video con el tema y la referencia del caracol. Adaptar con muñecos 3D.",
+    "status": "pendiente",
+    "priority": "media",
+    "tags": [
+      "caracol",
+      "3d",
+      "instagram"
+    ]
+  },
+  {
+    "id": "REF-003",
+    "type": "referencia",
+    "project": "dos_mentes",
+    "title": "Referencia visual: Transición y dimensión de recuerdos",
+    "url": "https://www.instagram.com/reels/Derqv2Pvn3f/",
+    "notes": "Transición hacia el cerebro / dimensión del pasado para el especial de la caja de recuerdos.",
+    "status": "pendiente",
+    "priority": "alta",
+    "tags": [
+      "transicion",
+      "dimension",
+      "cerebro"
+    ]
+  },
+  {
+    "id": "REF-004",
+    "type": "referencia",
+    "project": "general",
+    "title": "Skill Reel: Automatizar reels de motion con código",
+    "url": "https://github.com/Felpborges/skill-reel",
+    "notes": "Repo de Felipe Borges para crear y automatizar reels de motion graphics en código.",
+    "status": "pendiente",
+    "priority": "media",
+    "tags": [
+      "github",
+      "automation",
+      "motion"
+    ]
+  },
+  {
+    "id": "REF-005",
+    "type": "referencia",
+    "project": "general",
+    "title": "Librería 3D Nafay: Modelos y Assets listos",
+    "url": "https://nafay3d.com/#library",
+    "notes": "Librería con assets y modelos 3D listos para animación y motion graphics.",
+    "status": "pendiente",
+    "priority": "baja",
+    "tags": [
+      "libreria3d",
+      "assets",
+      "blender"
+    ]
+  },
+  {
+    "id": "REF-006",
+    "type": "referencia",
+    "project": "general",
+    "title": "Tutorial: Control de Motion en Flow",
+    "url": "https://youtu.be/2f4GYeWujT4",
+    "notes": "Técnica para control de motion graphics y curvas de animación en Flow.",
+    "status": "pendiente",
+    "priority": "media",
+    "tags": [
+      "tutorial",
+      "flow",
+      "motion"
+    ]
+  },
+  {
+    "id": "DIR-001",
+    "type": "directiva_claude",
+    "project": "general",
+    "title": "Probar Google Maps Scraper Kit para clientes",
+    "url": "https://github.com/Mahanaicoach/google-maps-scraper-kit",
+    "notes": "Repo para raspar clientes y negocios locales en Google Maps.",
+    "status": "pendiente",
+    "priority": "media",
+    "tags": [
+      "scraper",
+      "clientes",
+      "python"
+    ]
+  }
+]

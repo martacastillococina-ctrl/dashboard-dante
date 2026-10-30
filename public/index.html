@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dante Hub — Dashboard & Claude Bridge</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#22c55e',
+              600: '#16a34a',
+            },
+            dark: {
+              900: '#090d16',
+              800: '#111827',
+              700: '#1f2937',
+              600: '#374151'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for dark theme */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b0f19; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); }
+  </style>
+</head>
+<body class="bg-[#080c14] text-gray-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-black">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 border-b border-gray-800/80 glass px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <i data-lucide="compass" class="w-5 h-5 text-gray-950 font-bold"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">Dante Hub</h1>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Claude CLI Sync
+            </span>
+          </div>
+          <p class="text-xs text-gray-400">Panel de investigación, referencias y puente para Claude Code</p>
+        </div>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto text-xs py-1">
+        <div class="bg-gray-900/80 border border-gray-800 rounded-lg px-3 py-1.5 flex items-center gap-2">
+          <span class="text-gray-400">Directivas activas:</span>
+          <span id="stat-directivas" class="font-bold text-amber-400 text-sm">0</span>
+        </div>
+        <div class="bg-gray-900/80 border border-gray-800 rounded-lg px-3 py-1.5 flex items-center gap-2">
+          <span class="text-gray-400">Referencias:</span>
+          <span id="stat-referencias" class="font-bold text-cyan-400 text-sm">0</span>
+        </div>
+        <div class="bg-gray-900/80 border border-gray-800 rounded-lg px-3 py-1.5 flex items-center gap-2">
+          <span class="text-gray-400">Ideas guiones:</span>
+          <span id="stat-ideas" class="font-bold text-purple-400 text-sm">0</span>
+        </div>
+        <div class="bg-gray-900/80 border border-gray-800 rounded-lg px-3 py-1.5 flex items-center gap-2">
+          <span class="text-gray-400">Completados:</span>
+          <span id="stat-completados" class="font-bold text-emerald-400 text-sm">0</span>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="flex items-center gap-2">
+        <button onclick="abrirModalInbox()" class="px-3 py-1.5 rounded-lg bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-700/80 text-xs font-medium flex items-center gap-1.5 transition">
+          <i data-lucide="terminal" class="w-3.5 h-3.5 text-cyan-400"></i>
+          <span>Vista Claude Code</span>
+        </button>
+        <button onclick="abrirModalNuevo()" class="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-semibold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Nuevo Registro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 lg:px-8 py-6 space-y-6">
+
+    <!-- Claude Code CLI Banner -->
+    <section class="bg-gradient-to-r from-gray-900 via-gray-900/90 to-emerald-950/20 border border-gray-800/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
+          <h2 class="text-sm font-semibold text-white">Sincronización directa con Claude Code CLI</h2>
+        </div>
+        <p class="text-xs text-gray-400 max-w-2xl">
+          Todo lo que cargues acá se sincroniza en <code class="text-emerald-300 bg-gray-950 px-1.5 py-0.5 rounded border border-gray-800">CLAUDE_INBOX.md</code>. 
+          Claude Code puede leerlo y cambiar estados directamente desde la terminal.
+        </p>
+      </div>
+      <div class="flex items-center gap-2 bg-gray-950 border border-gray-800 px-3 py-1.5 rounded-xl font-mono text-xs text-gray-300">
+        <span class="text-emerald-400">$</span>
+        <span>python dash.py</span>
+        <button onclick="copiarTexto('python dash.py')" title="Copiar comando" class="ml-2 text-gray-400 hover:text-white transition">
+          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- Filters & Search Toolbar -->
+    <section class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-gray-900/50 p-3 rounded-2xl border border-gray-800/60">
+      
+      <!-- Project Tabs -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 text-xs">
+        <button onclick="filtrarProyecto('todos')" class="tab-btn active px-3 py-1.5 rounded-xl font-medium transition" data-proj="todos">Todos</button>
+        <button onclick="filtrarProyecto('dos_mentes')" class="tab-btn px-3 py-1.5 rounded-xl font-medium text-gray-400 hover:text-white transition" data-proj="dos_mentes">
+          🎬 Dos Mentes 3D
+        </button>
+        <button onclick="filtrarProyecto('canal_neon')" class="tab-btn px-3 py-1.5 rounded-xl font-medium text-gray-400 hover:text-white transition" data-proj="canal_neon">
+          ⚡ Canal Neón
+        </button>
+        <button onclick="filtrarProyecto('primer_brote')" class="tab-btn px-3 py-1.5 rounded-xl font-medium text-gray-400 hover:text-white transition" data-proj="primer_brote">
+          🌱 Primer Brote
+        </button>
+        <button onclick="filtrarProyecto('general')" class="tab-btn px-3 py-1.5 rounded-xl font-medium text-gray-400 hover:text-white transition" data-proj="general">
+          💡 General
+        </button>
+      </div>
+
+      <!-- Type & Status Filters + Search -->
+      <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
+        <!-- Type Filter -->
+        <select id="filtro-tipo" onchange="aplicarFiltros()" class="bg-gray-950 border border-gray-800 text-xs text-gray-300 rounded-xl px-2.5 py-1.5 focus:border-emerald-500 focus:outline-none">
+          <option value="todos">Todos los tipos</option>
+          <option value="directiva_claude">⚡ Directivas Claude</option>
+          <option value="referencia">🎥 Referencias Video</option>
+          <option value="idea">💡 Ideas Guiones</option>
+          <option value="avance">✅ Avances</option>
+        </select>
+
+        <!-- Status Filter -->
+        <select id="filtro-estado" onchange="aplicarFiltros()" class="bg-gray-950 border border-gray-800 text-xs text-gray-300 rounded-xl px-2.5 py-1.5 focus:border-emerald-500 focus:outline-none">
+          <option value="todos">Todos los estados</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="en_proceso">En proceso</option>
+          <option value="revisar">Para revisar</option>
+          <option value="listo">Completados</option>
+        </select>
+
+        <!-- Search Input -->
+        <div class="relative flex-1 sm:w-56">
+          <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-2.5 text-gray-500"></i>
+          <input id="input-busqueda" oninput="aplicarFiltros()" type="text" placeholder="Buscar notas, tags, links..." 
+                 class="w-full bg-gray-950 border border-gray-800 text-xs text-gray-200 rounded-xl pl-8 pr-3 py-1.5 focus:border-emerald-500 focus:outline-none">
+        </div>
+      </div>
+    </section>
+
+    <!-- Cards Grid -->
+    <section>
+      <div id="grid-items" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Generado dinámicamente -->
+      </div>
+      
+      <!-- Empty state -->
+      <div id="empty-state" class="hidden text-center py-16 space-y-3">
+        <div class="w-12 h-12 mx-auto rounded-full bg-gray-900 flex items-center justify-center text-gray-500 border border-gray-800">
+          <i data-lucide="inbox" class="w-6 h-6"></i>
+        </div>
+        <p class="text-sm text-gray-400">No se encontraron elementos con los filtros seleccionados.</p>
+        <button onclick="abrirModalNuevo()" class="text-xs text-emerald-400 hover:underline">+ Crear uno nuevo</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal: Crear / Editar Registro -->
+  <div id="modal-item" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      <div class="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
+        <h3 id="modal-titulo" class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="sparkle" class="w-4 h-4 text-emerald-400"></i>
+          <span>Nuevo Registro</span>
+        </h3>
+        <button onclick="cerrarModalNuevo()" class="text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="form-item" onsubmit="guardarItem(event)" class="p-6 space-y-4">
+        <input type="hidden" id="item-id">
+
+        <!-- Tipo y Proyecto -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Tipo de entrada</label>
+            <select id="item-tipo" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-gray-200 focus:border-emerald-500 focus:outline-none">
+              <option value="directiva_claude">⚡ Directiva para Claude</option>
+              <option value="referencia">🎥 Referencia / Video</option>
+              <option value="idea">💡 Idea de Guion / Tema</option>
+              <option value="avance">✅ Avance / Estado</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Proyecto</label>
+            <select id="item-proyecto" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-gray-200 focus:border-emerald-500 focus:outline-none">
+              <option value="dos_mentes">Dos Mentes (@dosmentes.3d)</option>
+              <option value="canal_neon">Canal Neón</option>
+              <option value="primer_brote">Primer Brote (Huerta)</option>
+              <option value="general">General / Nuevas ideas</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Título -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Título principal</label>
+          <input type="text" id="item-title" required placeholder="Ej: Ajustar final video 08 / Idea sobre sesgos cognitivos"
+                 class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-gray-200 focus:border-emerald-500 focus:outline-none">
+        </div>
+
+        <!-- Link URL -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Link de Video / Redes (YouTube, Instagram, TikTok, etc.)</label>
+          <div class="relative">
+            <i data-lucide="link" class="w-3.5 h-3.5 absolute left-3 top-2.5 text-gray-500"></i>
+            <input type="url" id="item-url" placeholder="https://youtube.com/watch?v=... o https://instagram.com/reel/..."
+                   class="w-full bg-gray-950 border border-gray-800 rounded-xl pl-9 pr-3 py-2 text-xs text-gray-200 focus:border-emerald-500 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Notas e Instrucciones para Claude -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Notas, ideas o consigna para Claude Code</label>
+          <textarea id="item-notes" rows="4" placeholder="Qué mirar, qué cambiar, tiempos exactos, segundos de cámara, estructura del guion..."
+                    class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-gray-200 focus:border-emerald-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- Prioridad, Estado y Tags -->
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Prioridad</label>
+            <select id="item-priority" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-2.5 py-1.5 text-xs text-gray-200 focus:border-emerald-500 focus:outline-none">
+              <option value="alta">🔴 Alta</option>
+              <option value="media" selected>🟡 Media</option>
+              <option value="baja">🟢 Baja</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Estado</label>
+            <select id="item-status" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-2.5 py-1.5 text-xs text-gray-200 focus:border-emerald-500 focus:outline-none">
+              <option value="pendiente" selected>Pendiente</option>
+              <option value="en_proceso">En proceso</option>
+              <option value="revisar">Para revisar</option>
+              <option value="listo">Listo</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Tags (separados por coma)</label>
+            <input type="text" id="item-tags" placeholder="blender, camara, guion"
+                   class="w-full bg-gray-950 border border-gray-800 rounded-xl px-2.5 py-1.5 text-xs text-gray-200 focus:border-emerald-500 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Botones de guardar -->
+        <div class="pt-3 border-t border-gray-800 flex items-center justify-end gap-2">
+          <button type="button" onclick="cerrarModalNuevo()" class="px-3.5 py-2 rounded-xl text-xs text-gray-400 hover:text-white">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-semibold text-xs transition shadow-lg shadow-emerald-500/20">
+            Guardar y Sincronizar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Vista Markdown de Claude Code -->
+  <div id="modal-inbox" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="terminal" class="w-4 h-4 text-cyan-400"></i>
+          <h3 class="text-sm font-bold text-white">CLAUDE_INBOX.md (Vista CLI en vivo)</h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="copiarTexto(document.getElementById('inbox-md-raw').innerText)" class="px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 flex items-center gap-1 transition">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar
+          </button>
+          <button onclick="cerrarModalInbox()" class="text-gray-400 hover:text-white">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+      <div class="p-6 overflow-y-auto font-mono text-xs text-gray-300 bg-gray-950/80 whitespace-pre-wrap leading-relaxed" id="inbox-md-raw">
+        Cargando markdown sincronizado...
+      </div>
+      <div class="px-6 py-3 border-t border-gray-800 bg-gray-900/50 flex items-center justify-between text-xs text-gray-400">
+        <span>Archivo local: <code class="text-cyan-400">dashboard-dante/CLAUDE_INBOX.md</code></span>
+        <span>Comando CLI: <code class="text-emerald-400">python dash.py</code></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-gray-900 border border-emerald-500/30 text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-medium translate-y-20 opacity-0 transition-all duration-300">
+    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toast-msg">Acción completada</span>
+  </div>
+
+  <!-- JavaScript Logic -->
+  <script>
+    let todosLosItems = [];
+    let proyectoActivo = 'todos';
+
+    const MAP_PROYECTOS = {
+      'dos_mentes': { nombre: 'Dos Mentes 3D', color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
+      'canal_neon': { nombre: 'Canal Neón', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+      'primer_brote': { nombre: 'Primer Brote', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+      'general': { nombre: 'General', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' }
+    };
+
+    const MAP_TIPOS = {
+      'directiva_claude': { nombre: '⚡ Directiva Claude', color: 'bg-amber-400/10 text-amber-300 border-amber-400/20' },
+      'referencia': { nombre: '🎥 Referencia Video', color: 'bg-cyan-400/10 text-cyan-300 border-cyan-400/20' },
+      'idea': { nombre: '💡 Idea Guion', color: 'bg-purple-400/10 text-purple-300 border-purple-400/20' },
+      'avance': { nombre: '✅ Avance', color: 'bg-emerald-400/10 text-emerald-300 border-emerald-400/20' }
+    };
+
+    const MAP_ESTADOS = {
+      'pendiente': { nombre: 'Pendiente', badge: 'bg-gray-800 text-gray-300 border-gray-700' },
+      'en_proceso': { nombre: 'En Proceso', badge: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
+      'revisar': { nombre: 'Para Revisar', badge: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30' },
+      'listo': { nombre: 'Listo', badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' }
+    };
+
+    const MAP_PRIORIDAD = {
+      'alta': '🔴 Alta',
+      'media': '🟡 Media',
+      'baja': '🟢 Baja'
+    };
+
+    async function cargarItems() {
+      try {
+        const res = await fetch('/api/items');
+        todosLosItems = await res.json();
+        actualizarEstadisticas();
+        aplicarFiltros();
+      } catch (err) {
+        console.error('Error cargando items:', err);
+      }
+    }
+
+    function actualizarEstadisticas() {
+      const directivas = todosLosItems.filter(i => i.type === 'directiva_claude' && i.status !== 'listo').length;
+      const referencias = todosLosItems.filter(i => i.type === 'referencia').length;
+      const ideas = todosLosItems.filter(i => i.type === 'idea').length;
+      const completados = todosLosItems.filter(i => i.status === 'listo').length;
+
+      document.getElementById('stat-directivas').innerText = directivas;
+      document.getElementById('stat-referencias').innerText = referencias;
+      document.getElementById('stat-ideas').innerText = ideas;
+      document.getElementById('stat-completados').innerText = completados;
+    }
+
+    function filtrarProyecto(proj) {
+      proyectoActivo = proj;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.proj === proj) {
+          btn.className = 'tab-btn active px-3 py-1.5 rounded-xl font-medium bg-emerald-500 text-gray-950 transition shadow-md shadow-emerald-500/20';
+        } else {
+          btn.className = 'tab-btn px-3 py-1.5 rounded-xl font-medium text-gray-400 hover:text-white transition';
+        }
+      });
+      aplicarFiltros();
+    }
+
+    function aplicarFiltros() {
+      const tipo = document.getElementById('filtro-tipo').value;
+      const estado = document.getElementById('filtro-estado').value;
+      const q = document.getElementById('input-busqueda').value.toLowerCase().trim();
+
+      const filtrados = todosLosItems.filter(item => {
+        if (proyectoActivo !== 'todos' && item.project !== proyectoActivo) return false;
+        if (tipo !== 'todos' && item.type !== tipo) return false;
+        if (estado !== 'todos' && item.status !== estado) return false;
+        if (q) {
+          const matchTitle = (item.title || '').toLowerCase().includes(q);
+          const matchNotes = (item.notes || '').toLowerCase().includes(q);
+          const matchTags = (item.tags || []).some(t => t.toLowerCase().includes(q));
+          const matchUrl = (item.url || '').toLowerCase().includes(q);
+          if (!matchTitle && !matchNotes && !matchTags && !matchUrl) return false;
+        }
+        return true;
+      });
+
+      renderizarGrid(filtrados);
+    }
+
+    function renderizarGrid(items) {
+      const container = document.getElementById('grid-items');
+      const empty = document.getElementById('empty-state');
+
+      if (!items || items.length === 0) {
+        container.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+      container.innerHTML = items.map(item => {
+        const proj = MAP_PROYECTOS[item.project] || { nombre: item.project, color: 'bg-gray-800 text-gray-300' };
+        const tipo = MAP_TIPOS[item.type] || { nombre: item.type, color: 'bg-gray-800 text-gray-300' };
+        const estado = MAP_ESTADOS[item.status] || { nombre: item.status, badge: 'bg-gray-800 text-gray-300' };
+        const prio = MAP_PRIORIDAD[item.priority] || item.priority;
+
+        const ytId = item.metadata?.youtube_id;
+        const thumbnailHtml = ytId ? `
+          <div class="relative w-full aspect-video rounded-xl overflow-hidden mb-3 bg-gray-950 border border-gray-800 group">
+            <img src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="Miniatura" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+            <a href="${item.url}" target="_blank" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+              <span class="w-10 h-10 rounded-full bg-red-600/90 flex items-center justify-center text-white shadow-lg">
+                <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+              </span>
+            </a>
+          </div>
+        ` : '';
+
+        const tagsHtml = (item.tags || []).map(t => `<span class="text-[10px] bg-gray-950 text-gray-400 px-2 py-0.5 rounded-md border border-gray-800">#${t}</span>`).join(' ');
+
+        return `
+          <div class="bg-gray-900/70 border border-gray-800/80 rounded-2xl p-4 flex flex-col justify-between hover:border-gray-700/80 transition duration-200 shadow-lg">
+            <div>
+              <!-- Top Badges -->
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[10px] font-mono font-bold text-gray-400 bg-gray-950 px-1.5 py-0.5 rounded border border-gray-800">${item.id}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full border ${proj.color}">${proj.nombre}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full border ${tipo.color}">${tipo.nombre}</span>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded-full border ${estado.badge}">${estado.nombre}</span>
+              </div>
+
+              <!-- Media Preview if available -->
+              ${thumbnailHtml}
+
+              <!-- Title & URL -->
+              <h3 class="text-sm font-semibold text-white mb-1.5 leading-snug">${item.title}</h3>
+              
+              ${item.url ? `
+                <a href="${item.url}" target="_blank" class="text-xs text-cyan-400 hover:underline flex items-center gap-1 mb-2.5 truncate max-w-full">
+                  <i data-lucide="external-link" class="w-3 h-3 flex-shrink-0"></i>
+                  <span class="truncate">${item.url}</span>
+                </a>
+              ` : ''}
+
+              <!-- Notes / Instructions -->
+              <div class="text-xs text-gray-300 bg-gray-950/60 p-2.5 rounded-xl border border-gray-800/60 mb-3 whitespace-pre-wrap line-clamp-4 leading-relaxed font-sans">
+                ${item.notes || '<span class="text-gray-500 italic">Sin notas detalladas</span>'}
+              </div>
+
+              <!-- Tags -->
+              ${tagsHtml ? `<div class="flex flex-wrap gap-1 mb-3">${tagsHtml}</div>` : ''}
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="pt-3 border-t border-gray-800/60 flex items-center justify-between gap-2 text-xs">
+              <!-- Quick Status Switch -->
+              <div class="flex items-center gap-1">
+                <button onclick="cambiarEstadoRapido('${item.id}', '${item.status === 'listo' ? 'pendiente' : 'listo'}')" 
+                        class="p-1.5 rounded-lg border ${item.status === 'listo' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-white'} transition" 
+                        title="${item.status === 'listo' ? 'Marcar como pendiente' : 'Marcar como completado'}">
+                  <i data-lucide="${item.status === 'listo' ? 'check-circle' : 'circle'}" class="w-4 h-4"></i>
+                </button>
+                <button onclick="copiarComandoCli('${item.id}')" class="px-2 py-1 rounded-lg bg-gray-950 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white text-[11px] font-mono flex items-center gap-1 transition" title="Copiar comando CLI para Claude">
+                  <i data-lucide="terminal" class="w-3 h-3 text-emerald-400"></i>
+                  <span>dash ver ${item.id}</span>
+                </button>
+              </div>
+
+              <!-- Edit & Delete -->
+              <div class="flex items-center gap-1">
+                <button onclick="editarItem('${item.id}')" class="p-1.5 text-gray-400 hover:text-white transition" title="Editar">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="eliminarItem('${item.id}')" class="p-1.5 text-gray-500 hover:text-red-400 transition" title="Eliminar">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    async function guardarItem(e) {
+      e.preventDefault();
+      const id = document.getElementById('item-id').value;
+      const itemData = {
+        type: document.getElementById('item-tipo').value,
+        project: document.getElementById('item-proyecto').value,
+        title: document.getElementById('item-title').value.trim(),
+        url: document.getElementById('item-url').value.trim(),
+        notes: document.getElementById('item-notes').value.trim(),
+        priority: document.getElementById('item-priority').value,
+        status: document.getElementById('item-status').value,
+        tags: document.getElementById('item-tags').value.split(',').map(t => t.trim()).filter(Boolean)
+      };
+
+      try {
+        let res;
+        if (id) {
+          res = await fetch(`/api/items/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(itemData)
+          });
+        } else {
+          res = await fetch('/api/items', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(itemData)
+          });
+        }
+
+        if (res.ok) {
+          mostrarToast(id ? 'Elemento actualizado y sincronizado' : 'Nuevo registro creado y sincronizado con Claude');
+          cerrarModalNuevo();
+          cargarItems();
+        }
+      } catch (err) {
+        console.error('Error guardando item:', err);
+      }
+    }
+
+    async function cambiarEstadoRapido(id, nuevoEstado) {
+      try {
+        const res = await fetch(`/api/status/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: nuevoEstado })
+        });
+        if (res.ok) {
+          mostrarToast(`Estado cambiado a ${nuevoEstado.toUpperCase()}`);
+          cargarItems();
+        }
+      } catch (err) {
+        console.error('Error cambiando estado:', err);
+      }
+    }
+
+    async function eliminarItem(id) {
+      if (!confirm(`¿Eliminar ${id}?`)) return;
+      try {
+        const res = await fetch(`/api/items/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          mostrarToast(`Elemento ${id} eliminado`);
+          cargarItems();
+        }
+      } catch (err) {
+        console.error('Error eliminando item:', err);
+      }
+    }
+
+    function editarItem(id) {
+      const item = todosLosItems.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('item-id').value = item.id;
+      document.getElementById('item-tipo').value = item.type;
+      document.getElementById('item-proyecto').value = item.project;
+      document.getElementById('item-title').value = item.title;
+      document.getElementById('item-url').value = item.url || '';
+      document.getElementById('item-notes').value = item.notes || '';
+      document.getElementById('item-priority').value = item.priority;
+      document.getElementById('item-status').value = item.status;
+      document.getElementById('item-tags').value = (item.tags || []).join(', ');
+
+      document.getElementById('modal-titulo').innerHTML = `<i data-lucide="edit-3" class="w-4 h-4 text-emerald-400"></i><span>Editar ${item.id}</span>`;
+      document.getElementById('modal-item').classList.remove('hidden');
+      document.getElementById('modal-item').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function abrirModalNuevo() {
+      document.getElementById('form-item').reset();
+      document.getElementById('item-id').value = '';
+      document.getElementById('modal-titulo').innerHTML = `<i data-lucide="sparkle" class="w-4 h-4 text-emerald-400"></i><span>Nuevo Registro</span>`;
+      document.getElementById('modal-item').classList.remove('hidden');
+      document.getElementById('modal-item').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function cerrarModalNuevo() {
+      document.getElementById('modal-item').classList.add('hidden');
+      document.getElementById('modal-item').classList.remove('flex');
+    }
+
+    async function abrirModalInbox() {
+      try {
+        const res = await fetch('/api/inbox-md');
+        const text = await res.text();
+        document.getElementById('inbox-md-raw').innerText = text;
+        document.getElementById('modal-inbox').classList.remove('hidden');
+        document.getElementById('modal-inbox').classList.add('flex');
+        lucide.createIcons();
+      } catch (err) {
+        console.error('Error cargando markdown:', err);
+      }
+    }
+
+    function cerrarModalInbox() {
+      document.getElementById('modal-inbox').classList.add('hidden');
+      document.getElementById('modal-inbox').classList.remove('flex');
+    }
+
+    function copiarComandoCli(id) {
+      copiarTexto(`python dash.py ver ${id}`);
+    }
+
+    function copiarTexto(texto) {
+      navigator.clipboard.writeText(texto).then(() => {
+        mostrarToast('Copiado al portapapeles: ' + texto);
+      });
+    }
+
+    function mostrarToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // Inicializar al cargar
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarItems();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
