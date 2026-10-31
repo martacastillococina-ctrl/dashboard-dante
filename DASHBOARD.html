@@ -1,735 +1,580 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dante Hub — Studio Workspace</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root {
-      --bg: #07080b;
-      --surface: #0e1117;
-      --surface-elevated: #151922;
-      --border: rgba(255, 255, 255, 0.08);
-      --border-focus: rgba(59, 130, 246, 0.5);
-      --accent-blue: #3b82f6;
-      --accent-emerald: #10b981;
-    }
-    body {
-      background-color: var(--bg);
-      color: #e5e7eb;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      letter-spacing: -0.011em;
-    }
-    /* Subtle custom scrollbar */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: #262c3a; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #3b4457; }
-    .hairline { border: 1px solid var(--border); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dante Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Dante Hub — estética de Dos Mentes: noche azul marino, luz que brilla, rótulos monoespaciados.
+   Azul = activo / en curso · Verde = listo. Los datos viven en localStorage (mismas claves que la versión anterior). */
+:root{
+  --noche:#05070C; --panel:#0A0F18; --panel-2:#0E1522; --borde:rgba(140,170,220,.10); --borde-2:rgba(140,170,220,.20);
+  --texto:#DCE4F0; --tenue:#7C8AA0; --apagado:#4A566A;
+  --azul:#4C8DFF; --azul-glow:rgba(76,141,255,.45); --verde:#3DDC97; --verde-glow:rgba(61,220,151,.40);
+  --ambar:#FFB020; --rojo:#FF5A6A;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace; --sans:Inter,system-ui,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--noche)}
+body{color:var(--texto);font-family:var(--sans);font-size:14px;line-height:1.5;min-height:100vh;
+  background-image:
+    radial-gradient(1200px 500px at 15% -10%, rgba(76,141,255,.10), transparent 60%),
+    radial-gradient(900px 400px at 100% 0%, rgba(61,220,151,.06), transparent 60%),
+    linear-gradient(rgba(140,170,220,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140,170,220,.035) 1px, transparent 1px);
+  background-size:auto,auto,32px 32px,32px 32px;background-attachment:fixed}
+::selection{background:var(--azul);color:#fff}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#1C2738;border-radius:3px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+a{color:var(--azul)}
+.mono{font-family:var(--mono)}
+.wrap{max-width:1360px;margin:0 auto;padding:0 20px}
+
+/* ---------- barra superior ---------- */
+header{position:sticky;top:0;z-index:40;background:rgba(5,7,12,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--borde)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px}
+.marca{display:flex;align-items:center;gap:12px}
+.logo{width:30px;height:30px;border-radius:50%;position:relative;background:radial-gradient(circle at 50% 50%,#fff 0 28%,transparent 30%);
+  box-shadow:0 0 0 1px var(--borde-2), 0 0 18px var(--azul-glow)}
+.logo::after{content:"";position:absolute;inset:7px;border-radius:50%;box-shadow:0 0 12px 2px rgba(255,255,255,.55)}
+.marca b{font-family:var(--mono);font-weight:800;letter-spacing:.18em;font-size:13px;color:#fff;
+  text-shadow:0 0 14px rgba(255,255,255,.35)}
+.marca small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--tenue);text-transform:uppercase}
+.acciones{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:10px;font-size:13px;font-weight:600;
+  border:1px solid var(--borde-2);background:var(--panel);color:var(--texto);transition:.15s}
+.btn:hover{border-color:var(--azul);box-shadow:0 0 0 3px rgba(76,141,255,.12)}
+.btn svg{width:15px;height:15px}
+.btn.primario{background:var(--verde);color:#04130C;border-color:transparent;box-shadow:0 0 22px rgba(61,220,151,.25)}
+.btn.primario:hover{box-shadow:0 0 0 3px rgba(61,220,151,.25),0 0 28px rgba(61,220,151,.35)}
+.solo-ancho{display:inline}
+
+/* ---------- tablero: contadores ---------- */
+.tablero{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 18px}
+.cont{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--borde);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden}
+.cont .rot{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;color:var(--tenue);text-transform:uppercase}
+.cont .num{font-family:var(--mono);font-weight:800;font-size:38px;line-height:1.1;margin-top:4px;letter-spacing:.02em}
+.cont.azul .num{color:var(--azul);text-shadow:0 0 22px var(--azul-glow)}
+.cont.verde .num{color:var(--verde);text-shadow:0 0 22px var(--verde-glow)}
+.cont.ambar .num{color:var(--ambar);text-shadow:0 0 22px rgba(255,176,32,.35)}
+.cont.blanco .num{color:#fff;text-shadow:0 0 22px rgba(255,255,255,.3)}
+.cont::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:2px;border-radius:2px;opacity:.7}
+.cont.azul::after{background:var(--azul)}.cont.verde::after{background:var(--verde)}
+.cont.ambar::after{background:var(--ambar)}.cont.blanco::after{background:#fff}
+
+/* ---------- filtros ---------- */
+.filtros{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:18px}
+.proyectos{display:flex;gap:4px;padding:4px;background:var(--panel);border:1px solid var(--borde);border-radius:12px}
+.proj-tab{height:30px;padding:0 12px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--tenue);transition:.15s}
+.proj-tab:hover{color:#fff}
+.proj-tab.active{background:var(--panel-2);color:#fff;box-shadow:inset 0 0 0 1px var(--borde-2),0 0 14px rgba(76,141,255,.18)}
+.buscar{position:relative;flex:1;min-width:220px;max-width:420px}
+.buscar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--tenue)}
+.campo{width:100%;height:38px;background:var(--panel);border:1px solid var(--borde);border-radius:10px;padding:0 12px;font-size:13px;color:var(--texto);outline:none;transition:.15s}
+.buscar .campo{padding-left:36px}
+.campo:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(76,141,255,.15)}
+select.campo{width:auto;padding-right:30px;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237C8AA0' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center}
+textarea.campo{height:auto;padding:10px 12px;resize:vertical;line-height:1.5}
+
+/* ---------- columnas ---------- */
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;padding-bottom:40px}
+.cabeza-lista{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.cabeza-lista h2{font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--tenue);text-transform:uppercase;font-weight:700}
+#label-conteo{font-family:var(--mono);font-size:11px;color:var(--apagado)}
+#lista-entradas{display:flex;flex-direction:column;gap:8px}
+
+.fila{position:relative;display:flex;gap:14px;align-items:flex-start;padding:14px 14px 14px 18px;border-radius:14px;cursor:pointer;
+  background:var(--panel);border:1px solid var(--borde);transition:.15s}
+.fila::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--c,var(--apagado));
+  box-shadow:0 0 12px var(--c,transparent)}
+.fila:hover{border-color:var(--borde-2);background:#0C1220}
+.fila.sel{border-color:rgba(76,141,255,.55);background:#0D1526;box-shadow:0 0 0 1px rgba(76,141,255,.25),0 10px 30px -12px rgba(76,141,255,.35)}
+.fila.listo{opacity:.62}
+.check{flex:none;width:20px;height:20px;margin-top:1px;border-radius:50%;border:1.5px solid var(--apagado);display:grid;place-items:center;transition:.15s}
+.check:hover{border-color:var(--verde)}
+.check.on{background:var(--verde);border-color:var(--verde);box-shadow:0 0 12px var(--verde-glow)}
+.check svg{width:11px;height:11px;color:#04130C}
+.cuerpo{flex:1;min-width:0}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:4px}
+.id{font-family:var(--mono);font-size:10.5px;color:var(--apagado);font-weight:700;letter-spacing:.06em}
+.chip{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:999px;
+  color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+.prio{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--rojo)}
+.titulo{font-size:14.5px;font-weight:600;color:#fff;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fila.listo .titulo{text-decoration:line-through;color:var(--tenue)}
+.nota{font-size:12.5px;color:var(--tenue);margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pie{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-family:var(--mono);font-size:10.5px;color:var(--apagado)}
+.pie .enlace{color:var(--azul)}
+.herr{display:flex;gap:2px;opacity:0;transition:.15s}
+.fila:hover .herr,.fila.sel .herr{opacity:1}
+.herr button{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--tenue)}
+.herr button:hover{background:var(--panel-2);color:#fff}
+.herr button.borrar:hover{color:var(--rojo)}
+.herr svg{width:15px;height:15px}
+#estado-vacio{border:1px dashed var(--borde-2);border-radius:14px;padding:48px 20px;text-align:center;color:var(--tenue);font-size:13px}
+#estado-vacio b{display:block;font-family:var(--mono);letter-spacing:.2em;font-size:11px;color:var(--apagado);margin-bottom:6px}
+.oculto{display:none!important}
+
+/* ---------- inspector ---------- */
+.inspector{position:sticky;top:80px;align-self:start;background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--borde);border-radius:16px;overflow:hidden}
+.insp-cab{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--borde)}
+.insp-cab span{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;color:var(--tenue);text-transform:uppercase;font-weight:700;display:flex;align-items:center;gap:8px}
+.punto{width:7px;height:7px;border-radius:50%;background:var(--azul);box-shadow:0 0 10px var(--azul)}
+#insp-id{font-family:var(--mono);font-size:11px;color:var(--texto);padding:2px 8px;border-radius:6px;background:var(--noche);border:1px solid var(--borde)}
+.insp-cuerpo{padding:18px;display:flex;flex-direction:column;gap:16px}
+#insp-titulo{font-size:17px;font-weight:700;color:#fff;line-height:1.3;margin-top:8px;letter-spacing:-.015em}
+.rotulo{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--apagado);text-transform:uppercase;font-weight:700;margin-bottom:6px}
+#insp-notas{background:var(--noche);border:1px solid var(--borde);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--texto);white-space:pre-wrap;max-height:260px;overflow:auto;line-height:1.6}
+.miniatura{position:relative;display:block;aspect-ratio:16/9;border-radius:12px;overflow:hidden;border:1px solid var(--borde);background:#000}
+.miniatura img{width:100%;height:100%;object-fit:cover;display:block}
+.miniatura span{position:absolute;inset:0;display:grid;place-items:center;background:rgba(5,7,12,.45);opacity:0;transition:.15s;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.12em;color:#fff}
+.miniatura:hover span{opacity:1}
+#insp-url{display:block;font-family:var(--mono);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none}
+#insp-url:hover{text-decoration:underline}
+#insp-tags{display:flex;flex-wrap:wrap;gap:6px}
+#insp-tags span{font-family:var(--mono);font-size:10.5px;color:var(--tenue);padding:2px 8px;border-radius:999px;border:1px solid var(--borde)}
+.insp-acc{display:flex;gap:8px;padding-top:14px;border-top:1px solid var(--borde)}
+.insp-acc .btn{flex:1;justify-content:center}
+#btn-toggle-status.hecho{border-color:var(--verde);color:var(--verde)}
+.cmd{font-family:var(--mono);font-size:12px;color:var(--azul)!important}
+
+/* ---------- modal ---------- */
+#modal-item{position:fixed;inset:0;z-index:50;background:rgba(2,4,8,.78);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px}
+#modal-item.flex{display:flex}
+.caja{width:100%;max-width:560px;background:var(--panel);border:1px solid var(--borde-2);border-radius:16px;overflow:hidden;box-shadow:0 30px 80px -20px rgba(0,0,0,.8),0 0 40px -10px rgba(76,141,255,.25)}
+.caja-cab{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--borde)}
+#modal-titulo{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:800;color:#fff}
+.cerrar{width:30px;height:30px;border-radius:8px;color:var(--tenue);font-size:16px}.cerrar:hover{background:var(--panel-2);color:#fff}
+#form-item{padding:20px;display:flex;flex-direction:column;gap:14px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#form-item select.campo{width:100%}
+label.rotulo{display:block}
+.caja-pie{display:flex;justify-content:flex-end;gap:8px;padding-top:14px;border-top:1px solid var(--borde)}
+
+/* ---------- aviso ---------- */
+#toast{position:fixed;right:20px;bottom:20px;z-index:60;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;
+  background:var(--panel-2);border:1px solid rgba(61,220,151,.4);font-family:var(--mono);font-size:12px;color:#fff;
+  box-shadow:0 0 24px rgba(61,220,151,.18);transform:translateY(20px);opacity:0;pointer-events:none;transition:.2s}
+#toast.ver{transform:none;opacity:1}
+#toast i{width:8px;height:8px;border-radius:50%;background:var(--verde);box-shadow:0 0 10px var(--verde)}
+
+/* ---------- celular ---------- */
+@media (max-width:1000px){ main{grid-template-columns:minmax(0,1fr)} .inspector{position:static} }
+main>div,.fila{min-width:0}
+body{overflow-x:hidden}
+@media (max-width:700px){
+  .wrap{padding:0 14px}
+  .tablero{grid-template-columns:repeat(2,1fr)}
+  .cont .num{font-size:30px}
+  .solo-ancho{display:none}
+  .buscar{max-width:none;flex-basis:100%}
+  .proyectos{flex-basis:100%}.proj-tab{flex:1}
+  .herr{opacity:1}
+  .dos{grid-template-columns:1fr}
+}
+</style>
 </head>
-<body class="min-h-screen selection:bg-blue-600 selection:text-white flex flex-col">
+<body>
 
-  <!-- Top App Bar -->
-  <header class="border-b border-white/[0.08] bg-[#07080b]/90 sticky top-0 z-40 px-4 sm:px-6 py-2.5 backdrop-blur-md">
-    <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
-      
-      <!-- Brand & Project Switcher -->
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2.5">
-          <div class="w-7 h-7 rounded-md bg-blue-600 flex items-center justify-center font-bold text-white text-xs shadow-md shadow-blue-500/20">
-            DM
-          </div>
-          <div class="leading-none">
-            <span class="text-xs font-semibold tracking-tight text-white block">DANTE HUB</span>
-            <span class="text-[10px] text-zinc-500 uppercase font-mono tracking-wider">Studio Workspace</span>
-          </div>
-        </div>
-
-        <div class="h-4 w-px bg-white/[0.1] hidden sm:block"></div>
-
-        <!-- Project Pills -->
-        <div class="flex items-center gap-1 bg-[#0e1117] p-0.5 rounded-lg border border-white/[0.06] text-xs">
-          <button onclick="cambiarProyecto('todos')" class="proj-tab active px-2.5 py-1 rounded-md text-xs font-medium bg-blue-600 text-white transition" data-p="todos">
-            Todos
-          </button>
-          <button onclick="cambiarProyecto('dos_mentes')" class="proj-tab px-2.5 py-1 rounded-md text-xs font-medium text-zinc-400 hover:text-white transition" data-p="dos_mentes">
-            Dos Mentes 3D
-          </button>
-          <button onclick="cambiarProyecto('general')" class="proj-tab px-2.5 py-1 rounded-md text-xs font-medium text-zinc-400 hover:text-white transition" data-p="general">
-            General
-          </button>
-        </div>
-      </div>
-
-      <!-- Action Cluster -->
-      <div class="flex items-center gap-2">
-        <button onclick="copiarParaClaude()" class="px-3 py-1.5 rounded-lg bg-[#0e1117] hover:bg-[#151922] text-xs font-medium text-zinc-300 border border-white/[0.08] hover:border-blue-500/40 flex items-center gap-1.5 transition">
-          <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-          <span class="hidden sm:inline">Copiar para</span> Claude Code
-        </button>
-
-        <button onclick="abrirModalNuevo()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium flex items-center gap-1.5 shadow-md shadow-emerald-900/30 transition">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-          <span>Nueva Entrada</span>
-        </button>
-      </div>
-
+<header>
+  <div class="wrap top">
+    <div class="marca">
+      <div class="logo"></div>
+      <div><b>DANTE HUB</b><small>Sala de control</small></div>
     </div>
-  </header>
-
-  <!-- Workspace Subheader: Search, Filters & Counters -->
-  <section class="border-b border-white/[0.06] bg-[#090b10] px-4 sm:px-6 py-2">
-    <div class="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
-      
-      <!-- Search Input -->
-      <div class="relative w-full sm:w-80">
-        <svg class="w-3.5 h-3.5 absolute left-3 top-2.5 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input id="buscador" oninput="aplicarFiltros()" type="text" placeholder="Buscar ideas, notas, URLs o tags..." 
-               class="w-full bg-[#0e1117] border border-white/[0.08] text-xs text-white rounded-md pl-8 pr-3 py-1.5 focus:outline-none focus:border-blue-500 transition">
-      </div>
-
-      <!-- Type and Status filters -->
-      <div class="flex items-center gap-2 flex-wrap">
-        <select id="filtro-tipo" onchange="aplicarFiltros()" class="bg-[#0e1117] border border-white/[0.08] text-xs text-zinc-300 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-blue-500">
-          <option value="todos">Todos los tipos</option>
-          <option value="directiva_claude">Directivas para Claude</option>
-          <option value="referencia">Referencias de Video</option>
-          <option value="idea">Ideas & Especiales</option>
-          <option value="avance">Avances & Hechos</option>
-        </select>
-
-        <select id="filtro-estado" onchange="aplicarFiltros()" class="bg-[#0e1117] border border-white/[0.08] text-xs text-zinc-300 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-blue-500">
-          <option value="todos">Todos los estados</option>
-          <option value="pendiente">Pendientes</option>
-          <option value="en_proceso">En proceso</option>
-          <option value="listo">Completados</option>
-        </select>
-
-        <div class="h-3 w-px bg-white/[0.1] hidden md:block"></div>
-
-        <!-- Metric counter indicator -->
-        <div class="text-[11px] text-zinc-400 font-mono flex items-center gap-2">
-          <span>Activos: <strong id="cnt-activos" class="text-blue-400 font-semibold">0</strong></span>
-          <span class="text-zinc-600">/</span>
-          <span>Listos: <strong id="cnt-listos" class="text-emerald-400 font-semibold">0</strong></span>
-        </div>
-      </div>
-
+    <div class="acciones">
+      <button class="btn" onclick="copiarParaClaude()" title="Copia todo lo pendiente para pegárselo a Claude Code">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        <span><span class="solo-ancho">Copiar para </span>Claude</span>
+      </button>
+      <button class="btn primario" onclick="abrirModalNuevo()">
+        <svg fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+        <span>Nueva</span>
+      </button>
     </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="tablero">
+    <div class="cont azul"><div class="rot">Activos</div><div class="num" id="cnt-activos">00</div></div>
+    <div class="cont verde"><div class="rot">Listos</div><div class="num" id="cnt-listos">00</div></div>
+    <div class="cont ambar"><div class="rot">Prioridad alta</div><div class="num" id="cnt-alta">00</div></div>
+    <div class="cont blanco"><div class="rot">Referencias</div><div class="num" id="cnt-refs">00</div></div>
   </section>
 
-  <!-- Workspace Main Columns (Two-column layout: Feed + Inspector) -->
-  <main class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <section class="filtros">
+    <div class="proyectos">
+      <button class="proj-tab active" data-p="todos" onclick="cambiarProyecto('todos')">Todos</button>
+      <button class="proj-tab" data-p="dos_mentes" onclick="cambiarProyecto('dos_mentes')">Dos Mentes</button>
+      <button class="proj-tab" data-p="general" onclick="cambiarProyecto('general')">General</button>
+    </div>
+    <div class="buscar">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input id="buscador" class="campo" oninput="aplicarFiltros()" type="text" placeholder="Buscar ideas, notas, links o tags…">
+    </div>
+    <select id="filtro-tipo" class="campo" onchange="aplicarFiltros()">
+      <option value="todos">Todos los tipos</option>
+      <option value="directiva_claude">Para Claude</option>
+      <option value="referencia">Referencias</option>
+      <option value="idea">Ideas y especiales</option>
+      <option value="avance">Hitos</option>
+    </select>
+    <select id="filtro-estado" class="campo" onchange="aplicarFiltros()">
+      <option value="todos">Todos los estados</option>
+      <option value="pendiente">Pendientes</option>
+      <option value="en_proceso">En proceso</option>
+      <option value="listo">Listos</option>
+    </select>
+  </section>
 
-    <!-- Left Feed Column (8 cols) -->
-    <div class="lg:col-span-7 xl:col-span-8 space-y-3">
-      <div class="flex items-center justify-between pb-1">
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 font-mono">Entradas del Proyecto</h2>
-        <span id="label-conteo" class="text-xs text-zinc-500">Mostrando registros</span>
-      </div>
-
-      <div id="lista-entradas" class="space-y-2.5">
-        <!-- Render dinámico aquí -->
-      </div>
-
-      <div id="estado-vacio" class="hidden border border-dashed border-white/[0.1] rounded-xl p-12 text-center text-zinc-500 text-xs">
-        No hay registros que coincidan con los filtros.
-      </div>
+  <main>
+    <div>
+      <div class="cabeza-lista"><h2>Entradas</h2><span id="label-conteo"></span></div>
+      <div id="lista-entradas"></div>
+      <div id="estado-vacio" class="oculto"><b>SIN RESULTADOS</b>No hay entradas con esos filtros.</div>
     </div>
 
-    <!-- Right Inspector / Detail Column (5 cols) -->
-    <div class="lg:col-span-5 xl:col-span-4">
-      <div class="sticky top-20 bg-[#0e1117] border border-white/[0.08] rounded-xl p-5 space-y-4 shadow-xl">
-        
-        <div class="flex items-center justify-between border-b border-white/[0.06] pb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-            <span class="text-xs font-semibold uppercase tracking-wider text-zinc-300 font-mono">Inspector de Entrada</span>
-          </div>
-          <span id="insp-id" class="text-[10px] font-mono font-medium text-zinc-500 px-1.5 py-0.5 rounded bg-black/40 border border-white/[0.06]">ID</span>
+    <aside class="inspector">
+      <div class="insp-cab"><span><i class="punto"></i>Detalle</span><b id="insp-id">—</b></div>
+      <div class="insp-cuerpo" id="insp-contenido">
+        <div>
+          <span id="insp-tipo-badge" class="chip" style="--c:var(--azul)">—</span>
+          <h3 id="insp-titulo">Elegí una entrada de la lista</h3>
         </div>
-
-        <div id="insp-contenido" class="space-y-4 text-xs">
-          <div>
-            <span id="insp-tipo-badge" class="text-[10px] font-mono px-2 py-0.5 rounded border border-blue-500/30 text-blue-400 bg-blue-500/10">Tipo</span>
-            <h3 id="insp-titulo" class="text-sm font-semibold text-white mt-1.5 leading-snug">Seleccioná un elemento de la lista</h3>
-          </div>
-
-          <div id="insp-preview-box" class="hidden">
-            <!-- Thumbnail video -->
-            <div class="rounded-lg overflow-hidden border border-white/[0.08] bg-black aspect-video relative group">
-              <img id="insp-thumbnail" src="" class="w-full h-full object-cover">
-              <a id="insp-video-link" href="" target="_blank" class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                <span class="px-2.5 py-1 rounded bg-blue-600 text-white font-medium text-[11px] flex items-center gap-1">
-                  Abrir video ↗
-                </span>
-              </a>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-mono text-zinc-500 uppercase mb-1">Notas & Consigna:</label>
-            <div id="insp-notas" class="bg-[#07080b] p-3 rounded-lg border border-white/[0.06] text-zinc-300 whitespace-pre-wrap leading-relaxed max-h-56 overflow-y-auto font-sans">
-              Hacé clic en cualquier entrada del panel izquierdo para ver los detalles, tiempos de corte y directivas.
-            </div>
-          </div>
-
-          <div id="insp-url-container" class="hidden">
-            <label class="block text-[11px] font-mono text-zinc-500 uppercase mb-1">Enlace:</label>
-            <a id="insp-url" href="" target="_blank" class="text-blue-400 hover:text-blue-300 underline block truncate font-mono text-[11px]"></a>
-          </div>
-
-          <div id="insp-tags" class="flex flex-wrap gap-1"></div>
-
-          <!-- Inspector Action Buttons -->
-          <div class="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2">
-            <button id="btn-toggle-status" onclick="alternarEstadoSeleccionado()" class="px-3 py-1.5 rounded-lg border border-white/[0.08] hover:bg-white/[0.04] text-xs font-medium text-zinc-300 transition flex items-center gap-1.5">
-              <span>Marcar como Listo</span>
-            </button>
-            <button onclick="copiarComandoCli()" class="px-2.5 py-1.5 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 text-xs font-mono transition">
-              dash ver <span id="insp-cmd-id">ID</span>
-            </button>
-          </div>
+        <a id="insp-preview-box" class="miniatura oculto" target="_blank">
+          <img id="insp-thumbnail" alt=""><span>ABRIR VIDEO ↗</span>
+        </a>
+        <div>
+          <div class="rotulo">Notas y consigna</div>
+          <div id="insp-notas">Tocá cualquier entrada para ver sus detalles.</div>
         </div>
-
+        <div id="insp-url-container" class="oculto">
+          <div class="rotulo">Enlace</div>
+          <a id="insp-url" target="_blank"></a>
+        </div>
+        <div id="insp-tags"></div>
+        <div class="insp-acc">
+          <button id="btn-toggle-status" class="btn" onclick="alternarEstadoSeleccionado()">✓ Marcar listo</button>
+          <button class="btn cmd" onclick="copiarComandoCli()" title="Copia el comando para la terminal">dash ver <span id="insp-cmd-id">ID</span></button>
+        </div>
       </div>
-    </div>
-
+    </aside>
   </main>
+</div>
 
-  <!-- Modal: Crear / Editar Registro -->
-  <div id="modal-item" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-[#0e1117] border border-white/[0.1] rounded-xl w-full max-w-lg overflow-hidden shadow-2xl">
-      <div class="px-5 py-3.5 border-b border-white/[0.08] flex items-center justify-between">
-        <h3 id="modal-titulo" class="text-xs font-bold uppercase tracking-wider text-white font-mono">Nueva Entrada</h3>
-        <button onclick="cerrarModalNuevo()" class="text-zinc-400 hover:text-white text-sm">✕</button>
+<!-- Modal: crear / editar -->
+<div id="modal-item" onclick="if(event.target===this)cerrarModalNuevo()">
+  <div class="caja">
+    <div class="caja-cab"><h3 id="modal-titulo">Nueva entrada</h3><button class="cerrar" onclick="cerrarModalNuevo()">✕</button></div>
+    <form id="form-item" onsubmit="guardarItem(event)">
+      <input type="hidden" id="item-id">
+      <div class="dos">
+        <div><label class="rotulo" for="item-tipo">Tipo</label>
+          <select id="item-tipo" class="campo">
+            <option value="directiva_claude">Para Claude</option>
+            <option value="referencia">Referencia / video</option>
+            <option value="idea">Idea / especial</option>
+            <option value="avance">Hito</option>
+          </select></div>
+        <div><label class="rotulo" for="item-proyecto">Proyecto</label>
+          <select id="item-proyecto" class="campo">
+            <option value="dos_mentes">Dos Mentes (@dosmentes.3d)</option>
+            <option value="general">General</option>
+          </select></div>
       </div>
-
-      <form id="form-item" onsubmit="guardarItem(event)" class="p-5 space-y-3.5 text-xs">
-        <input type="hidden" id="item-id">
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] font-mono text-zinc-400 uppercase mb-1">Tipo</label>
-            <select id="item-tipo" class="w-full bg-[#07080b] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none focus:border-blue-500">
-              <option value="directiva_claude">Directiva para Claude</option>
-              <option value="referencia">Referencia / Video</option>
-              <option value="idea">Idea / Especial</option>
-              <option value="avance">Avance / Hito</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[11px] font-mono text-zinc-400 uppercase mb-1">Proyecto</label>
-            <select id="item-proyecto" class="w-full bg-[#07080b] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none focus:border-blue-500">
-              <option value="dos_mentes">Dos Mentes (@dosmentes.3d)</option>
-              <option value="general">General</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-mono text-zinc-400 uppercase mb-1">Título</label>
-          <input type="text" id="item-title" required placeholder="Ej: Especial #2 La huella de los padres"
-                 class="w-full bg-[#07080b] border border-white/[0.08] rounded-lg px-3 py-1.5 text-zinc-100 focus:outline-none focus:border-blue-500">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-mono text-zinc-400 uppercase mb-1">Link de Video (YouTube, Instagram, etc.)</label>
-          <input type="url" id="item-url" placeholder="https://youtube.com/watch?v=... o https://instagram.com/reel/..."
-                 class="w-full bg-[#07080b] border border-white/[0.08] rounded-lg px-3 py-1.5 text-zinc-100 focus:outline-none focus:border-blue-500">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-mono text-zinc-400 uppercase mb-1">Notas, detalles y consigna para Claude</label>
-          <textarea id="item-notes" rows="4" placeholder="Qué mirar, segundo exacto, personajes, cámara, rotación o código..."
-                    class="w-full bg-[#07080b] border border-white/[0.08] rounded-lg px-3 py-1.5 text-zinc-100 focus:outline-none focus:border-blue-500"></textarea>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] font-mono text-zinc-400 uppercase mb-1">Prioridad</label>
-            <select id="item-priority" class="w-full bg-[#07080b] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none focus:border-blue-500">
-              <option value="alta">Alta</option>
-              <option value="media" selected>Media</option>
-              <option value="baja">Baja</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[11px] font-mono text-zinc-400 uppercase mb-1">Tags (separados por coma)</label>
-            <input type="text" id="item-tags" placeholder="blender, camara, estelas"
-                   class="w-full bg-[#07080b] border border-white/[0.08] rounded-lg px-3 py-1.5 text-zinc-100 focus:outline-none focus:border-blue-500">
-          </div>
-        </div>
-
-        <div class="pt-3 border-t border-white/[0.08] flex items-center justify-end gap-2">
-          <button type="button" onclick="cerrarModalNuevo()" class="px-3 py-1.5 text-zinc-400 hover:text-white">Cancelar</button>
-          <button type="submit" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-md shadow-blue-900/30 transition">
-            Guardar
-          </button>
-        </div>
-      </form>
-    </div>
+      <div><label class="rotulo" for="item-title">Título</label>
+        <input id="item-title" class="campo" type="text" required placeholder="Ej: Especial #2 La huella de los padres"></div>
+      <div><label class="rotulo" for="item-url">Link (YouTube, Instagram…)</label>
+        <input id="item-url" class="campo" type="url" placeholder="https://…"></div>
+      <div><label class="rotulo" for="item-notes">Notas y consigna para Claude</label>
+        <textarea id="item-notes" class="campo" rows="4" placeholder="Qué mirar, segundo exacto, personajes, cámara…"></textarea></div>
+      <div class="dos">
+        <div><label class="rotulo" for="item-priority">Prioridad</label>
+          <select id="item-priority" class="campo">
+            <option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option>
+          </select></div>
+        <div><label class="rotulo" for="item-tags">Tags (con coma)</label>
+          <input id="item-tags" class="campo" type="text" placeholder="blender, camara, estelas"></div>
+      </div>
+      <div class="caja-pie">
+        <button type="button" class="btn" onclick="cerrarModalNuevo()">Cancelar</button>
+        <button type="submit" class="btn primario">Guardar</button>
+      </div>
+    </form>
   </div>
+</div>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-[#0e1117] border border-blue-500/40 text-white px-4 py-2 rounded-lg shadow-2xl flex items-center gap-2 text-xs font-mono translate-y-16 opacity-0 transition-all duration-200">
-    <span class="text-blue-400">●</span>
-    <span id="toast-msg">Completado</span>
-  </div>
+<div id="toast"><i></i><span id="toast-msg">Listo</span></div>
 
-  <script>
-    // Datos reales extraídos de tus archivos (editar piola.txt, viral.txt, yo dantee.txt)
-    const SEED_DATA = [
-      {
-        id: "AVAN-001",
-        type: "avance",
-        project: "dos_mentes",
-        title: "Especial 'La vida es un viaje' (48s) SUBIDO (+300k vistas)",
-        url: "",
-        notes: "Video de 48s con estelas y estrellas pegando fuerte (~300k). Valida la fórmula emocional de stickmen + luz sobre fondo oscuro para los siguientes especiales.",
-        status: "listo",
-        priority: "alta",
-        tags: ["300k", "estelas", "blender", "viral"]
-      },
-      {
-        id: "IDEA-001",
-        type: "idea",
-        project: "dos_mentes",
-        title: "Especial #2: La huella de los padres (El ambiente moldea)",
-        url: "",
-        notes: "Inspiración directa en 'La vida es un viaje': cómo la vida de los padres se refleja en el crecimiento del hijo. Contraste: padre con disciplina genera hijo con disciplina vs padres con adicciones/vicios que arrastran al hijo. Mensaje central: 'Todo por el ambiente / El ambiente moldea'.",
-        status: "pendiente",
-        priority: "alta",
-        tags: ["emocional", "estelas", "blender", "ambiente"]
-      },
-      {
-        id: "IDEA-002",
-        type: "idea",
-        project: "dos_mentes",
-        title: "Especial #3: La caja de recuerdos (El primer gol y el abrazo)",
-        url: "",
-        notes: "Stickman en habitación oscura con lluvia y rayos, foco en medio. Abre caja de recuerdos, zoom a su cerebro en 3ra persona. Ve a su padre enseñándole fútbol, mamá de arquera. Mete su primer gol. Stickman nene ve a su yo grande: 'No te rindas nunca, yo confío en ti'. Abrazo de los padres: 'Estoy orgulloso en lo que te estás convirtiendo'. Vuelve a la habitación abrazando la foto, luz se apaga. Bucle infinito.",
-        status: "pendiente",
-        priority: "alta",
-        tags: ["guion-completo", "emocional", "recuerdos", "blender"]
-      },
-      {
-        id: "REF-001",
-        type: "referencia",
-        project: "dos_mentes",
-        title: "Referencia Viral: Ángulo que dio casi 500k visitas",
-        url: "https://www.instagram.com/reels/DezRXh2glO0/",
-        notes: "Estilo viral en EEUU del personaje explicativo. De este video se sacó el ángulo que metió casi 500k vistas. Estudiar ritmo y gancho inicial.",
-        status: "en_proceso",
-        priority: "alta",
-        tags: ["viral", "500k", "gancho"]
-      },
-      {
-        id: "REF-002",
-        type: "referencia",
-        project: "dos_mentes",
-        title: "Referencia @dosmentes.3d: El tema del caracol",
-        url: "https://www.instagram.com/reels/DerTPkmM8im/",
-        notes: "Video con el tema y la referencia del caracol. Adaptar con muñecos 3D y lenguaje visual de Dos Mentes.",
-        status: "pendiente",
-        priority: "media",
-        tags: ["caracol", "3d", "instagram"]
-      },
-      {
-        id: "REF-003",
-        type: "referencia",
-        project: "dos_mentes",
-        title: "Referencia visual: Transición y dimensión de recuerdos",
-        url: "https://www.instagram.com/reels/Derqv2Pvn3f/",
-        notes: "Miren lo que hace este chico para hacer la transición hacia el cerebro / dimensión del pasado para el especial de la caja de recuerdos.",
-        status: "pendiente",
-        priority: "alta",
-        tags: ["transicion", "dimension", "cerebro"]
-      },
-      {
-        id: "REF-004",
-        type: "referencia",
-        project: "general",
-        title: "Skill Reel: Automatizar reels de motion con código",
-        url: "https://github.com/Felpborges/skill-reel",
-        notes: "Repo de Felipe Borges para crear y automatizar reels de motion graphics en código. Estudiar estructura para integrar a nuestro pipeline.",
-        status: "pendiente",
-        priority: "media",
-        tags: ["github", "automation", "motion"]
-      },
-      {
-        id: "REF-005",
-        type: "referencia",
-        project: "general",
-        title: "Librería 3D Nafay: Modelos y Assets listos",
-        url: "https://nafay3d.com/#library",
-        notes: "Librería con assets y modelos 3D listos para animación y motion graphics.",
-        status: "pendiente",
-        priority: "baja",
-        tags: ["libreria3d", "assets", "blender"]
-      },
-      {
-        id: "REF-006",
-        type: "referencia",
-        project: "general",
-        title: "Tutorial: Control de Motion en Flow",
-        url: "https://youtu.be/2f4GYeWujT4",
-        notes: "Técnica para control de motion graphics y curvas de animación en Flow.",
-        status: "pendiente",
-        priority: "media",
-        tags: ["tutorial", "flow", "motion"]
-      },
-      {
-        id: "DIR-001",
-        type: "directiva_claude",
-        project: "general",
-        title: "Probar Google Maps Scraper Kit para clientes",
-        url: "https://github.com/Mahanaicoach/google-maps-scraper-kit",
-        notes: "Repo para raspar clientes y negocios locales en Google Maps. Evaluar con Claude cómo correrlo con Python para prospectar clientes.",
-        status: "pendiente",
-        priority: "media",
-        tags: ["scraper", "clientes", "python"]
-      }
-    ];
+<script>
+// Datos semilla (los mismos de la versión anterior). Si ya hay datos guardados en este navegador, se usan esos.
+const SEED_DATA = [
+  { id:"AVAN-001", type:"avance", project:"dos_mentes", title:"Especial 'La vida es un viaje' (48s) SUBIDO (+300k vistas)", url:"",
+    notes:"Video de 48s con estelas y estrellas pegando fuerte (~300k). Valida la fórmula emocional de stickmen + luz sobre fondo oscuro para los siguientes especiales.",
+    status:"listo", priority:"alta", tags:["300k","estelas","blender","viral"] },
+  { id:"IDEA-001", type:"idea", project:"dos_mentes", title:"Especial #2: La huella de los padres (El ambiente moldea)", url:"",
+    notes:"Inspiración directa en 'La vida es un viaje': cómo la vida de los padres se refleja en el crecimiento del hijo. Contraste: padre con disciplina genera hijo con disciplina vs padres con adicciones/vicios que arrastran al hijo. Mensaje central: 'Todo por el ambiente / El ambiente moldea'.",
+    status:"pendiente", priority:"alta", tags:["emocional","estelas","blender","ambiente"] },
+  { id:"IDEA-002", type:"idea", project:"dos_mentes", title:"Especial #3: La caja de recuerdos (El primer gol y el abrazo)", url:"",
+    notes:"Stickman en habitación oscura con lluvia y rayos, foco en medio. Abre caja de recuerdos, zoom a su cerebro en 3ra persona. Ve a su padre enseñándole fútbol, mamá de arquera. Mete su primer gol. Stickman nene ve a su yo grande: 'No te rindas nunca, yo confío en ti'. Abrazo de los padres: 'Estoy orgulloso en lo que te estás convirtiendo'. Vuelve a la habitación abrazando la foto, luz se apaga. Bucle infinito.",
+    status:"pendiente", priority:"alta", tags:["guion-completo","emocional","recuerdos","blender"] },
+  { id:"REF-001", type:"referencia", project:"dos_mentes", title:"Referencia Viral: Ángulo que dio casi 500k visitas", url:"https://www.instagram.com/reels/DezRXh2glO0/",
+    notes:"Estilo viral en EEUU del personaje explicativo. De este video se sacó el ángulo que metió casi 500k vistas. Estudiar ritmo y gancho inicial.",
+    status:"en_proceso", priority:"alta", tags:["viral","500k","gancho"] },
+  { id:"REF-002", type:"referencia", project:"dos_mentes", title:"Referencia @dosmentes.3d: El tema del caracol", url:"https://www.instagram.com/reels/DerTPkmM8im/",
+    notes:"Video con el tema y la referencia del caracol. Adaptar con muñecos 3D y lenguaje visual de Dos Mentes.",
+    status:"pendiente", priority:"media", tags:["caracol","3d","instagram"] },
+  { id:"REF-003", type:"referencia", project:"dos_mentes", title:"Referencia visual: Transición y dimensión de recuerdos", url:"https://www.instagram.com/reels/Derqv2Pvn3f/",
+    notes:"Miren lo que hace este chico para hacer la transición hacia el cerebro / dimensión del pasado para el especial de la caja de recuerdos.",
+    status:"pendiente", priority:"alta", tags:["transicion","dimension","cerebro"] },
+  { id:"REF-004", type:"referencia", project:"general", title:"Skill Reel: Automatizar reels de motion con código", url:"https://github.com/Felpborges/skill-reel",
+    notes:"Repo de Felipe Borges para crear y automatizar reels de motion graphics en código. Estudiar estructura para integrar a nuestro pipeline.",
+    status:"pendiente", priority:"media", tags:["github","automation","motion"] },
+  { id:"REF-005", type:"referencia", project:"general", title:"Librería 3D Nafay: Modelos y Assets listos", url:"https://nafay3d.com/#library",
+    notes:"Librería con assets y modelos 3D listos para animación y motion graphics.",
+    status:"pendiente", priority:"baja", tags:["libreria3d","assets","blender"] },
+  { id:"REF-006", type:"referencia", project:"general", title:"Tutorial: Control de Motion en Flow", url:"https://youtu.be/2f4GYeWujT4",
+    notes:"Técnica para control de motion graphics y curvas de animación en Flow.",
+    status:"pendiente", priority:"media", tags:["tutorial","flow","motion"] },
+  { id:"DIR-001", type:"directiva_claude", project:"general", title:"Probar Google Maps Scraper Kit para clientes", url:"https://github.com/Mahanaicoach/google-maps-scraper-kit",
+    notes:"Repo para raspar clientes y negocios locales en Google Maps. Evaluar con Claude cómo correrlo con Python para prospectar clientes.",
+    status:"pendiente", priority:"media", tags:["scraper","clientes","python"] }
+];
 
-    const VERSION_DATOS = "v_dante_real_30_10_full";
-    let items = JSON.parse(localStorage.getItem('dante_hub_items') || 'null');
-    if (!items || localStorage.getItem('dante_hub_version') !== VERSION_DATOS) {
-      items = SEED_DATA;
-      localStorage.setItem('dante_hub_items', JSON.stringify(items));
-      localStorage.setItem('dante_hub_version', VERSION_DATOS);
+// Mismas claves que la versión anterior: así no se pierde nada de lo que Dante ya cargó.
+const VERSION_DATOS = "v_dante_real_30_10_full";
+let items = null;
+try { items = JSON.parse(localStorage.getItem('dante_hub_items') || 'null'); } catch (e) {}
+try {
+  if (!items || localStorage.getItem('dante_hub_version') !== VERSION_DATOS) {
+    items = SEED_DATA;
+    localStorage.setItem('dante_hub_items', JSON.stringify(items));
+    localStorage.setItem('dante_hub_version', VERSION_DATOS);
+  }
+} catch (e) { items = items || SEED_DATA; }
+
+let proyectoActivo = 'todos';
+let idSeleccionado = items[0]?.id || '';
+
+const TIPOS = {
+  directiva_claude: { label:'Para Claude', c:'var(--ambar)' },
+  referencia:       { label:'Referencia',  c:'var(--azul)' },
+  idea:             { label:'Especial',    c:'var(--verde)' },
+  avance:           { label:'Hito',        c:'#C9D3E3' }
+};
+const COLOR_ESTADO = { listo:'var(--verde)', en_proceso:'var(--azul)', pendiente:'var(--apagado)' };
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dos = n => String(n).padStart(2, '0');
+
+function extraerYtId(url) {
+  if (!url || !/youtu/.test(url)) return '';
+  const m = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([0-9A-Za-z_-]{11})/);
+  return m ? m[1] : '';
+}
+
+function cambiarProyecto(p) {
+  proyectoActivo = p;
+  document.querySelectorAll('.proj-tab').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+  aplicarFiltros();
+}
+
+function aplicarFiltros() {
+  const q = document.getElementById('buscador').value.toLowerCase().trim();
+  const tipo = document.getElementById('filtro-tipo').value;
+  const estado = document.getElementById('filtro-estado').value;
+  const filtrados = items.filter(it => {
+    if (proyectoActivo !== 'todos' && it.project !== proyectoActivo) return false;
+    if (tipo !== 'todos' && it.type !== tipo) return false;
+    if (estado !== 'todos' && it.status !== estado) return false;
+    if (q) {
+      const txt = [it.title, it.notes, it.url, ...(it.tags || [])].join(' ').toLowerCase();
+      if (!txt.includes(q)) return false;
     }
+    return true;
+  });
+  actualizarMetricas();
+  renderLista(filtrados);
+}
 
-    let proyectoActivo = 'todos';
-    let idSeleccionado = items[0]?.id || '';
+function actualizarMetricas() {
+  document.getElementById('cnt-activos').textContent = dos(items.filter(i => i.status !== 'listo').length);
+  document.getElementById('cnt-listos').textContent = dos(items.filter(i => i.status === 'listo').length);
+  document.getElementById('cnt-alta').textContent = dos(items.filter(i => i.priority === 'alta' && i.status !== 'listo').length);
+  document.getElementById('cnt-refs').textContent = dos(items.filter(i => i.type === 'referencia').length);
+}
 
-    function extraerYtId(url) {
-      if (!url) return '';
-      const m = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/) || url.match(/youtu\.be\/([0-9A-Za-z_-]{11})/);
-      return m ? m[1] : '';
-    }
+const ICON_OK = '<svg fill="none" stroke="currentColor" stroke-width="3.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+const ICON_EDIT = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.4-9.4a2 2 0 112.8 2.8L11.8 15H9v-2.8l8.6-8.6z"/></svg>';
+const ICON_DEL = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.9 12.1A2 2 0 0116.1 21H7.9a2 2 0 01-2-1.9L5 7m5 4v6m4-6v6M9 7V4h6v3M4 7h16"/></svg>';
 
-    function cambiarProyecto(p) {
-      proyectoActivo = p;
-      document.querySelectorAll('.proj-tab').forEach(b => {
-        if (b.dataset.p === p) {
-          b.className = 'proj-tab active px-2.5 py-1 rounded-md text-xs font-medium bg-blue-600 text-white transition';
-        } else {
-          b.className = 'proj-tab px-2.5 py-1 rounded-md text-xs font-medium text-zinc-400 hover:text-white transition';
-        }
-      });
-      aplicarFiltros();
-    }
-
-    function aplicarFiltros() {
-      const q = document.getElementById('buscador').value.toLowerCase().trim();
-      const tipo = document.getElementById('filtro-tipo').value;
-      const estado = document.getElementById('filtro-estado').value;
-
-      const filtrados = items.filter(it => {
-        if (proyectoActivo !== 'todos' && it.project !== proyectoActivo) return false;
-        if (tipo !== 'todos' && it.type !== tipo) return false;
-        if (estado !== 'todos' && it.status !== estado) return false;
-        if (q) {
-          const t1 = (it.title || '').toLowerCase().includes(q);
-          const t2 = (it.notes || '').toLowerCase().includes(q);
-          const t3 = (it.tags || []).some(t => t.toLowerCase().includes(q));
-          if (!t1 && !t2 && !t3) return false;
-        }
-        return true;
-      });
-
-      actualizarMetricas();
-      renderLista(filtrados);
-    }
-
-    function actualizarMetricas() {
-      const activos = items.filter(i => i.status !== 'listo').length;
-      const listos = items.filter(i => i.status === 'listo').length;
-      document.getElementById('cnt-activos').innerText = activos;
-      document.getElementById('cnt-listos').innerText = listos;
-    }
-
-    function renderLista(lista) {
-      const contenedor = document.getElementById('lista-entradas');
-      const vacio = document.getElementById('estado-vacio');
-      document.getElementById('label-conteo').innerText = `${lista.length} de ${items.length} entradas`;
-
-      if (!lista.length) {
-        contenedor.innerHTML = '';
-        vacio.classList.remove('hidden');
-        return;
-      }
-      vacio.classList.add('hidden');
-
-      const TYPE_STYLES = {
-        'directiva_claude': { label: 'Directiva', class: 'text-amber-400 border-amber-500/20 bg-amber-500/10' },
-        'referencia': { label: 'Referencia', class: 'text-blue-400 border-blue-500/20 bg-blue-500/10' },
-        'idea': { label: 'Especial 3D', class: 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' },
-        'avance': { label: 'Hito', class: 'text-zinc-300 border-zinc-500/20 bg-zinc-500/10' }
-      };
-
-      contenedor.innerHTML = lista.map(it => {
-        const esSeleccionado = it.id === idSeleccionado;
-        const ts = TYPE_STYLES[it.type] || { label: it.type, class: 'text-zinc-400 border-white/[0.08] bg-white/[0.04]' };
-        const esListo = it.status === 'listo';
-        const ytId = extraerYtId(it.url);
-
-        return `
-          <div onclick="seleccionarItem('${it.id}')" 
-               class="group relative rounded-xl border p-3.5 transition cursor-pointer flex items-start gap-3.5 
-                      ${esSeleccionado ? 'bg-[#121620] border-blue-500/60 shadow-lg shadow-blue-950/20' : 'bg-[#0e1117] border-white/[0.06] hover:border-white/[0.14] hover:bg-[#11141c]'}">
-            
-            <!-- Status indicator dot / button -->
-            <button onclick="event.stopPropagation(); alternarEstado('${it.id}')" 
-                    title="${esListo ? 'Completado (clic para reabrir)' : 'Pendiente (clic para completar)'}" 
-                    class="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full border flex items-center justify-center transition 
-                           ${esListo ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'border-zinc-600 hover:border-blue-400'}">
-              ${esListo ? '<svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>' : ''}
-            </button>
-
-            <!-- Main Content snippet -->
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="text-[10px] font-mono text-zinc-500 font-semibold">${it.id}</span>
-                <span class="text-[10px] font-mono px-2 py-0.2 rounded border ${ts.class}">${ts.label}</span>
-                ${it.priority === 'alta' ? '<span class="text-[10px] font-mono text-red-400">● ALTA</span>' : ''}
-              </div>
-
-              <h4 class="text-xs font-semibold text-white tracking-tight leading-snug truncate ${esListo ? 'line-through text-zinc-400' : ''}">
-                ${it.title}
-              </h4>
-
-              <p class="text-[11px] text-zinc-400 mt-1 line-clamp-1 leading-normal">
-                ${it.notes || 'Sin detalles adicionales.'}
-              </p>
-
-              <!-- Tags / Links -->
-              <div class="flex items-center gap-2 mt-2">
-                ${it.url ? `<span class="text-[10px] font-mono text-blue-400 flex items-center gap-1">🔗 ${ytId ? 'YouTube' : 'Enlace'}</span>` : ''}
-                ${(it.tags || []).map(t => `<span class="text-[10px] text-zinc-500 font-mono">#${t}</span>`).join(' ')}
-              </div>
-            </div>
-
-            <!-- Quick Delete/Edit buttons -->
-            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-              <button onclick="event.stopPropagation(); editarItem('${it.id}')" class="p-1 text-zinc-400 hover:text-white" title="Editar">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-              </button>
-              <button onclick="event.stopPropagation(); eliminarItem('${it.id}')" class="p-1 text-zinc-500 hover:text-red-400" title="Eliminar">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-              </button>
-            </div>
-
+function renderLista(lista) {
+  const cont = document.getElementById('lista-entradas');
+  document.getElementById('label-conteo').textContent = `${lista.length} de ${items.length}`;
+  document.getElementById('estado-vacio').classList.toggle('oculto', lista.length > 0);
+  cont.innerHTML = lista.map(it => {
+    const t = TIPOS[it.type] || { label: it.type, c: 'var(--tenue)' };
+    const listo = it.status === 'listo';
+    const yt = extraerYtId(it.url);
+    const id = esc(it.id);
+    return `
+      <div class="fila ${it.id === idSeleccionado ? 'sel' : ''} ${listo ? 'listo' : ''}" style="--c:${COLOR_ESTADO[it.status] || 'var(--apagado)'}" onclick="seleccionarItem('${id}')">
+        <button class="check ${listo ? 'on' : ''}" title="${listo ? 'Listo (tocá para reabrir)' : 'Marcar listo'}" onclick="event.stopPropagation();alternarEstado('${id}')">${listo ? ICON_OK : ''}</button>
+        <div class="cuerpo">
+          <div class="meta">
+            <span class="id">${id}</span>
+            <span class="chip" style="--c:${t.c}">${esc(t.label)}</span>
+            ${it.status === 'en_proceso' ? '<span class="chip" style="--c:var(--azul)">En proceso</span>' : ''}
+            ${it.priority === 'alta' && !listo ? '<span class="prio">● ALTA</span>' : ''}
           </div>
-        `;
-      }).join('');
+          <div class="titulo">${esc(it.title)}</div>
+          <div class="nota">${esc(it.notes || 'Sin detalles.')}</div>
+          ${(it.url || (it.tags || []).length) ? `<div class="pie">
+            ${it.url ? `<span class="enlace">↗ ${yt ? 'YouTube' : /instagram/.test(it.url) ? 'Instagram' : /github/.test(it.url) ? 'GitHub' : 'Enlace'}</span>` : ''}
+            ${(it.tags || []).map(x => `<span>#${esc(x)}</span>`).join('')}
+          </div>` : ''}
+        </div>
+        <div class="herr">
+          <button title="Editar" onclick="event.stopPropagation();editarItem('${id}')">${ICON_EDIT}</button>
+          <button class="borrar" title="Eliminar" onclick="event.stopPropagation();eliminarItem('${id}')">${ICON_DEL}</button>
+        </div>
+      </div>`;
+  }).join('');
+  const sel = items.find(i => i.id === idSeleccionado) || lista[0];
+  if (sel) actualizarInspector(sel);
+}
 
-      // Actualizar inspector si el item seleccionado sigue existiendo
-      const seleccionado = items.find(i => i.id === idSeleccionado) || lista[0];
-      if (seleccionado) {
-        actualizarInspector(seleccionado);
-      }
-    }
+function seleccionarItem(id) {
+  idSeleccionado = id;
+  const it = items.find(i => i.id === id);
+  if (it) { actualizarInspector(it); aplicarFiltros(); }
+  if (window.innerWidth <= 1000) document.querySelector('.inspector').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
-    function seleccionarItem(id) {
-      idSeleccionado = id;
-      const it = items.find(i => i.id === id);
-      if (it) {
-        actualizarInspector(it);
-        aplicarFiltros();
-      }
-    }
+function actualizarInspector(it) {
+  const t = TIPOS[it.type] || { label: it.type, c: 'var(--tenue)' };
+  document.getElementById('insp-id').textContent = it.id;
+  document.getElementById('insp-cmd-id').textContent = it.id;
+  const badge = document.getElementById('insp-tipo-badge');
+  badge.textContent = t.label; badge.style.setProperty('--c', t.c);
+  document.getElementById('insp-titulo').textContent = it.title;
+  document.getElementById('insp-notas').textContent = it.notes || 'Sin notas.';
+  const yt = extraerYtId(it.url), prev = document.getElementById('insp-preview-box');
+  if (yt) {
+    document.getElementById('insp-thumbnail').src = `https://img.youtube.com/vi/${yt}/hqdefault.jpg`;
+    prev.href = it.url; prev.classList.remove('oculto');
+  } else prev.classList.add('oculto');
+  const uc = document.getElementById('insp-url-container'), u = document.getElementById('insp-url');
+  if (it.url) { u.href = it.url; u.textContent = it.url; uc.classList.remove('oculto'); } else uc.classList.add('oculto');
+  document.getElementById('insp-tags').innerHTML = (it.tags || []).map(x => `<span>#${esc(x)}</span>`).join('');
+  const b = document.getElementById('btn-toggle-status');
+  b.textContent = it.status === 'listo' ? '↺ Reabrir' : '✓ Marcar listo';
+  b.classList.toggle('hecho', it.status !== 'listo');
+}
 
-    function actualizarInspector(it) {
-      document.getElementById('insp-id').innerText = it.id;
-      document.getElementById('insp-cmd-id').innerText = it.id;
-      document.getElementById('insp-titulo').innerText = it.title;
-      document.getElementById('insp-notas').innerText = it.notes || 'Sin notas.';
+function alternarEstadoSeleccionado() { if (idSeleccionado) alternarEstado(idSeleccionado); }
 
-      const ytId = extraerYtId(it.url);
-      const previewBox = document.getElementById('insp-preview-box');
-      if (ytId) {
-        document.getElementById('insp-thumbnail').src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-        document.getElementById('insp-video-link').href = it.url;
-        previewBox.classList.remove('hidden');
-      } else {
-        previewBox.classList.add('hidden');
-      }
+function alternarEstado(id) {
+  const it = items.find(i => i.id === id); if (!it) return;
+  it.status = it.status === 'listo' ? 'pendiente' : 'listo';
+  guardarTodo(); mostrarToast(it.status === 'listo' ? `${id} listo` : `${id} reabierto`);
+}
 
-      const urlContainer = document.getElementById('insp-url-container');
-      const urlEl = document.getElementById('insp-url');
-      if (it.url) {
-        urlEl.href = it.url;
-        urlEl.innerText = it.url;
-        urlContainer.classList.remove('hidden');
-      } else {
-        urlContainer.classList.add('hidden');
-      }
+function eliminarItem(id) {
+  if (!confirm(`¿Eliminar ${id}?`)) return;
+  items = items.filter(i => i.id !== id);
+  if (idSeleccionado === id) idSeleccionado = items[0]?.id || '';
+  guardarTodo(); mostrarToast(`${id} eliminado`);
+}
 
-      const tagsEl = document.getElementById('insp-tags');
-      tagsEl.innerHTML = (it.tags || []).map(t => `<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-black/40 text-zinc-400 border border-white/[0.06]">#${t}</span>`).join(' ');
+function guardarTodo() {
+  try { localStorage.setItem('dante_hub_items', JSON.stringify(items)); } catch (e) {}
+  aplicarFiltros();
+}
 
-      const btnStatus = document.getElementById('btn-toggle-status');
-      btnStatus.innerText = it.status === 'listo' ? 'Reabrir tarea' : '✓ Marcar como Listo';
-    }
+function abrirModalNuevo() {
+  document.getElementById('form-item').reset();
+  document.getElementById('item-id').value = '';
+  document.getElementById('modal-titulo').textContent = 'Nueva entrada';
+  document.getElementById('modal-item').classList.add('flex');
+  setTimeout(() => document.getElementById('item-title').focus(), 50);
+}
+function cerrarModalNuevo() { document.getElementById('modal-item').classList.remove('flex'); }
 
-    function alternarEstadoSeleccionado() {
-      if (idSeleccionado) alternarEstado(idSeleccionado);
-    }
+function editarItem(id) {
+  const it = items.find(i => i.id === id); if (!it) return;
+  document.getElementById('item-id').value = it.id;
+  document.getElementById('item-tipo').value = it.type;
+  document.getElementById('item-proyecto').value = it.project;
+  document.getElementById('item-title').value = it.title;
+  document.getElementById('item-url').value = it.url || '';
+  document.getElementById('item-notes').value = it.notes || '';
+  document.getElementById('item-priority').value = it.priority || 'media';
+  document.getElementById('item-tags').value = (it.tags || []).join(', ');
+  document.getElementById('modal-titulo').textContent = `Editar ${it.id}`;
+  document.getElementById('modal-item').classList.add('flex');
+}
 
-    function alternarEstado(id) {
-      const it = items.find(i => i.id === id);
-      if (!it) return;
-      it.status = it.status === 'listo' ? 'pendiente' : 'listo';
-      guardarTodo();
-      mostrarToast(`Estado: ${it.status.toUpperCase()}`);
-    }
+function guardarItem(e) {
+  e.preventDefault();
+  const v = id => document.getElementById(id).value.trim();
+  const id = v('item-id'), tipo = v('item-tipo');
+  const datos = { type: tipo, project: v('item-proyecto'), title: v('item-title'), url: v('item-url'), notes: v('item-notes'),
+    priority: v('item-priority'), tags: v('item-tags').split(',').map(t => t.trim()).filter(Boolean) };
+  if (id) {
+    const it = items.find(i => i.id === id); if (it) Object.assign(it, datos);
+  } else {
+    const pref = { directiva_claude: 'DIR', referencia: 'REF', idea: 'IDEA', avance: 'AVAN' }[tipo] || 'ITEM';
+    // número libre: el mayor que ya existe con ese prefijo + 1 (no se repiten ids aunque se borren entradas)
+    const max = items.filter(i => i.id.startsWith(pref + '-')).reduce((m, i) => Math.max(m, parseInt(i.id.split('-')[1]) || 0), 0);
+    const nuevoId = `${pref}-${String(max + 1).padStart(3, '0')}`;
+    items.unshift({ id: nuevoId, status: 'pendiente', ...datos });
+    idSeleccionado = nuevoId;
+  }
+  guardarTodo(); cerrarModalNuevo(); mostrarToast('Guardado');
+}
 
-    function eliminarItem(id) {
-      if (!confirm(`¿Eliminar ${id}?`)) return;
-      items = items.filter(i => i.id !== id);
-      if (idSeleccionado === id) idSeleccionado = items[0]?.id || '';
-      guardarTodo();
-      mostrarToast(`Eliminado ${id}`);
-    }
+function copiar(texto, msg) {
+  const ok = () => mostrarToast(msg);
+  if (navigator.clipboard) navigator.clipboard.writeText(texto).then(ok, () => respaldo());
+  else respaldo();
+  function respaldo() {
+    const ta = document.createElement('textarea'); ta.value = texto; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); ok(); } catch (e) {} ta.remove();
+  }
+}
 
-    function guardarTodo() {
-      localStorage.setItem('dante_hub_items', JSON.stringify(items));
-      aplicarFiltros();
-    }
+function copiarComandoCli() { copiar(`python dash.py ver ${idSeleccionado}`, 'Comando copiado'); }
 
-    function abrirModalNuevo() {
-      document.getElementById('form-item').reset();
-      document.getElementById('item-id').value = '';
-      document.getElementById('modal-titulo').innerText = 'Nueva Entrada';
-      document.getElementById('modal-item').classList.remove('hidden');
-      document.getElementById('modal-item').classList.add('flex');
-    }
+function copiarParaClaude() {
+  let md = `# INBOX DE DANTE PARA CLAUDE CODE\n> Generado el ${new Date().toLocaleString()} desde Dante Hub.\n\n`;
+  const grupo = (titulo, lista, f) => { if (lista.length) { md += `## ${titulo}\n`; lista.forEach(f); md += '\n'; } };
+  const abiertos = items.filter(i => i.status !== 'listo');
+  grupo('1. Directivas inmediatas', abiertos.filter(i => i.type === 'directiva_claude'), d => {
+    md += `- [${d.id}] ${d.title} (Prioridad: ${d.priority})\n`; if (d.url) md += `  Link: ${d.url}\n`; if (d.notes) md += `  Instrucciones: ${d.notes}\n`; });
+  grupo('2. Especiales y proyectos 3D (Dos Mentes)', abiertos.filter(i => i.type === 'idea'), d => {
+    md += `- [${d.id}] ${d.title}\n`; if (d.notes) md += `  ${d.notes}\n`; });
+  grupo('3. Referencias visuales', abiertos.filter(i => i.type === 'referencia'), d => {
+    md += `- [${d.id}] ${d.title}\n`; if (d.url) md += `  URL: ${d.url}\n`; if (d.notes) md += `  Detalles: ${d.notes}\n`; });
+  grupo('4. Hitos y completados', items.filter(i => i.status === 'listo'), d => { md += `- [${d.id}] ${d.title} (Listo)\n`; });
+  copiar(md, 'Copiado: pegáselo a Claude Code');
+}
 
-    function cerrarModalNuevo() {
-      document.getElementById('modal-item').classList.add('hidden');
-      document.getElementById('modal-item').classList.remove('flex');
-    }
+let toastT;
+function mostrarToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('ver'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('ver'), 2200);
+}
 
-    function editarItem(id) {
-      const it = items.find(i => i.id === id);
-      if (!it) return;
-      document.getElementById('item-id').value = it.id;
-      document.getElementById('item-tipo').value = it.type;
-      document.getElementById('item-proyecto').value = it.project;
-      document.getElementById('item-title').value = it.title;
-      document.getElementById('item-url').value = it.url || '';
-      document.getElementById('item-notes').value = it.notes || '';
-      document.getElementById('item-priority').value = it.priority || 'media';
-      document.getElementById('item-tags').value = (it.tags || []).join(', ');
-
-      document.getElementById('modal-titulo').innerText = `Editar ${it.id}`;
-      document.getElementById('modal-item').classList.remove('hidden');
-      document.getElementById('modal-item').classList.add('flex');
-    }
-
-    function guardarItem(e) {
-      e.preventDefault();
-      const id = document.getElementById('item-id').value;
-      const tipo = document.getElementById('item-tipo').value;
-      const proj = document.getElementById('item-proyecto').value;
-      const title = document.getElementById('item-title').value.trim();
-      const url = document.getElementById('item-url').value.trim();
-      const notes = document.getElementById('item-notes').value.trim();
-      const priority = document.getElementById('item-priority').value;
-      const tags = document.getElementById('item-tags').value.split(',').map(t => t.trim()).filter(Boolean);
-
-      if (id) {
-        const it = items.find(i => i.id === id);
-        if (it) {
-          Object.assign(it, { type: tipo, project: proj, title, url, notes, priority, tags });
-        }
-      } else {
-        const pref = { 'directiva_claude': 'DIR', 'referencia': 'REF', 'idea': 'IDEA', 'avance': 'AVAN' }[tipo] || 'ITEM';
-        const num = items.length + 1;
-        const nuevoId = `${pref}-${String(num).padStart(3, '0')}`;
-        items.unshift({ id: nuevoId, type: tipo, project: proj, title, url, notes, priority, status: 'pendiente', tags });
-        idSeleccionado = nuevoId;
-      }
-
-      guardarTodo();
-      cerrarModalNuevo();
-      mostrarToast('Entrada guardada con éxito');
-    }
-
-    function copiarComandoCli() {
-      const cmd = `python dash.py ver ${idSeleccionado}`;
-      navigator.clipboard.writeText(cmd).then(() => {
-        mostrarToast('Comando copiado: ' + cmd);
-      });
-    }
-
-    function copiarParaClaude() {
-      let md = `# INBOX DE DANTE PARA CLAUDE CODE\n`;
-      md += `> Generado el ${new Date().toLocaleString()} desde Dante Hub Studio.\n\n`;
-
-      const directivas = items.filter(i => i.type === 'directiva_claude' && i.status !== 'listo');
-      const ideas = items.filter(i => i.type === 'idea' && i.status !== 'listo');
-      const referencias = items.filter(i => i.type === 'referencia' && i.status !== 'listo');
-      const listos = items.filter(i => i.status === 'listo');
-
-      if (directivas.length) {
-        md += `## 1. Directivas Inmediatas\n`;
-        directivas.forEach(d => {
-          md += `- [${d.id}] ${d.title} (Prioridad: ${d.priority})\n`;
-          if (d.url) md += `  Link: ${d.url}\n`;
-          if (d.notes) md += `  Instrucciones: ${d.notes}\n`;
-        });
-        md += `\n`;
-      }
-
-      if (ideas.length) {
-        md += `## 2. Especiales y Proyectos 3D (Dos Mentes)\n`;
-        ideas.forEach(id => {
-          md += `- [${id.id}] ${id.title}\n`;
-          if (id.notes) md += `  ${id.notes}\n`;
-        });
-        md += `\n`;
-      }
-
-      if (referencias.length) {
-        md += `## 3. Referencias Visuales\n`;
-        referencias.forEach(r => {
-          md += `- [${r.id}] ${r.title}\n`;
-          if (r.url) md += `  URL: ${r.url}\n`;
-          if (r.notes) md += `  Detalles: ${r.notes}\n`;
-        });
-        md += `\n`;
-      }
-
-      if (listos.length) {
-        md += `## 4. Hitos y Completados\n`;
-        listos.forEach(l => {
-          md += `- [${l.id}] ${l.title} (Listo)\n`;
-        });
-      }
-
-      navigator.clipboard.writeText(md).then(() => {
-        mostrarToast('¡Copiado! Pegáselo directo a Claude Code');
-      });
-    }
-
-    function mostrarToast(msg) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toast-msg').innerText = msg;
-      toast.classList.remove('translate-y-16', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-      setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-16', 'opacity-0');
-      }, 2200);
-    }
-
-    // Arranque
-    aplicarFiltros();
-  </script>
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModalNuevo(); });
+aplicarFiltros();
+</script>
 </body>
 </html>
